@@ -127,7 +127,63 @@ new aVehicleNames[][] =
 	"Police Ranger", "Picador", "S.W.A.T Van", "Alpha", "Phoenix", "Glendale", "Sadler", "Luggage", "Luggage", "Stairs",
 	"Boxville", "Tiller", "Utility Trailer"
 };
-
+enum TELEPORT_DATA
+{
+	TPName[32],
+	Float:TPx,
+	Float:TPy,
+	Float:TPz,
+	Float:TPa,
+	TPInt,
+	TPVw
+}
+new Teleports[][TELEPORT_DATA] =
+{
+	{"Montgomery", 1286.065795, 259.397888, 19.546892, 247.222427, 0, 0},
+	{"Palomino Creek", 2286.5813, -15.4796, 26.4844, 272.2236, 0, 0},
+	{"Dillimore", 702.0617, -469.7100, 16.3359, 181.1477, 0, 0},
+	{"Blueberry", 220.249404, -154.039321, 1.578125, 270.986877, 0, 0},
+	{"Fort Carson", -136.034286, 1214.920288, 19.74, 0.0, 0, 0},
+	{"Angel Pine", -2131.383789, -2412.833496, 30.625, 0.0, 0, 0},
+	{"Bayside", -2442.044189, 2324.293945, 4.984375, 0.0, 0, 0},
+	{"El Quebrados", -1410.3293, 2612.6653, 55.8359, 88.8133, 0, 0},
+	{"Las Barrancas", -852.036499, 1543.056640, 22.854631, 270.0, 0, 0},
+	{"Las Payasadas", -242.2057, 2683.0261, 62.6804, 68.2640, 0, 0},
+	{"Elite Trucking", 599.1758, 1653.0250, 6.9922, 34.1044, 0, 0},
+	{"Bone County Prison", 262.1924, 1405.8936, 10.4992, 90.0, 0, 0},
+	{"Los Santos", 1183.4312, -1324.5529, 13.5772, 264.7505, 0, 0},
+	{"San Fierro", -2028.9001, 173.9227, 28.8359, 267.0274, 0, 0},
+	{"Las Venturas", 2166.3525, 1683.4303, 10.8203, 91.2637, 0, 0},
+	{"LS Tower", 1541.081054, -1364.230834, 329.796875, 357.439239, 0, 0},
+	{"SF Tower", -1753.774169, 885.215759, 295.875000, 357.91381, 0, 0},
+	{"Area 51", 77.2566, 1919.5846, 17.6406, 0.0, 0, 0},
+	{"Boneyard", 351.9080, 2496.6165, 16.4844, 178.5574, 0, 0},
+	{"Hilltop Farm", 1034.0928, -336.2662, 73.9922, 0.0, 0, 0},
+	{"Taxi HQ", 1235.911987, 187.018402, 19.554687, 0.0, 0, 0},
+	{"Hospital", 1243.4813, 330.6503, 19.5547, 339.0066, 0, 0},
+	{"Dillimore Automotive", 643.090332, -503.772155, 16.335937, 0.0, 0, 0},
+	{"Gant Bridge", -2666.669189, 1595.062866, 217.273895, 0.0, 0, 0},
+	{"Admin Jail", 268.5122, 84.1522, 1001.0391, 180.0, 6, 0},
+	{"Bloodring Stadium", -1394.2, 987.62, 1023.96, 0.0, 15, 0},
+	{"8 Track Stadium", -1395.958, -208.197, 1051.170, 0.0, 7, 0},
+	{"Dirt Track Stadium", -1424.9319, -664.5869, 1059.8585, 0.0, 4, 0},
+	{"RC Battlefield", -1079.99, 1061.58, 1343.04, 0.0, 10, 0},
+	{"Big Ear", -297.2155, 1530.0469, 75.3594, 0.0, 0, 0},
+	{"Palomino Creek Townhall", 2279.6270, -80.6795, 26.5356, 89.7161, 0, 0},
+	{"Palomino Creek Garage", 2428.9744, 110.4881, 26.4689, 273.9619, 0, 0},
+	{"Fisher's Lagoon", 2155.6021, -96.6893, 2.7278, 57.7928, 0, 0},
+	{"Dillimore Police Department", 650.5731, -613.9204, 16.3359, 356.2127, 0, 0},
+	{"SACFD Station 49", 1463.2152, 415.1849, 20.2617, 156.5134, 0, 0},
+	{"County Rentals", 1403.7343, 404.3691, 19.7578, 156.3592, 0, 0},
+	{"Fort Carson Mall", 104.9788, 1099.9265, 13.6094, 269.5034, 0, 0},
+	{"Bone County Docks", 150.7258, 660.2635, 5.0328, 283.6165, 0, 0},
+	{"RS Haul", -109.1080, -1122.4072, 2.0526, 258.5106, 0, 0},
+	{"Mount Chiliad", -2292.3567, -1666.7966, 482.7730, 46.4071, 0, 0},
+	{"Lake Hollow", -821.3415, -1896.7317, 11.0879, 199.0963, 0, 0},
+	{"Northstar Rock", 2371.4080, -650.5092, 127.5305, 89.4399, 0, 0},
+	{"Richman", 355.9613, -1159.7986, 78.0146, 230.0479, 0, 0},
+	{"LS Airport", 1859.1118, -2393.2073, 13.5547, 179.1602, 0, 0}
+};
 #define SendClientMessageF(%1,%2,%3) \
 	SendClientMessage(%1, %2, (format(szMessage, sizeof(szMessage), %3), szMessage))
 
@@ -1718,213 +1774,60 @@ CMD:afix(playerid, params[])
 	SendClientMessage(playerid, 0xFFFFFFFF, "Your vehicle has been repaired!");
 	return 1;
 }
-CMD:tp(playerid, params[])
+CMD:tp(playerid) return cmd_teleport(playerid);
+CMD:teleport(playerid)
 {
-	new tpID, locations[32];
+	if(IsPlayerInAnyVehicle(playerid)) SetPVarInt(playerid, "tpVID", GetPlayerVehicleID(playerid));
 
-	if(IsPlayerAdminLevel(playerid, 1))
+	for(new i = 0; i < sizeof(Teleports); i++)
 	{
-		if(sscanf(params, "us[32]", tpID, locations))
-		{
-			SendClientMessage(playerid, 0xCECECEFF, "[USAGE]: /tp [playerid] [location]");
-			SendClientMessage(playerid, 0xCECECEFF, "Teleports: Montgomery, Palomino Creek, Fort Carson, Dillimore, Blueberry, Piece of Spain, Lucky Loans, Pershing Square");
-			SendClientMessage(playerid, 0xCECECEFF, "Teleports: SF Warehouse, Zombotech, SF Boat, SF Boat 1, LV Parking Garage, LV Parking Garage 1, Loyal Legion, Jefferson Motel");
-		}
+		format(szMessage, sizeof(szMessage), "%s%s\n", szMessage, Teleports[i][TPName]);
+	}
+	Dialog_Show(playerid, TPList, DIALOG_STYLE_LIST, "TP yourself to ...", szMessage, "Teleport", "Cancel");
+	return true;
+}
+CMD:tpto(playerid, params[])
+{
+	new loc[32];
+	if(sscanf(params, "s[32]", loc)) return SysMsg(playerid, "Usage: /tpto [teleport name from /tp list]");
 
-		else if(strcmp(locations, "Montgomery", true) == 0)
+	new p = -1;
+	for(new x = 0; x < sizeof(Teleports); x++)
+	{
+		if(strfind(Teleports[x][TPName], loc, true) != -1)
 		{
-			SetPlayerPos(tpID, 1284.476440, 260.044921, 19.554687);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Montgomery.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Montgomery.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Montgomery.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Palomino Creek", true) == 0)
-		{
-			SetPlayerPos(tpID, 2285.740966, -17.755676, 26.484375);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Palomino Creek.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Palomino Creek.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Palomino Creek.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Dillimore", true) == 0)
-		{
-			SetPlayerPos(tpID, 673.676208, -494.798370, 16.335937);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Dillimore.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Dillimore.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Dillimore.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Fort Carson", true) == 0)
-		{
-			SetPlayerPos(tpID, -122.897377, 1206.739868, 19.742187);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Fort Carson.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Fort Carson.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Fort Carson.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Piece of Spain", true) == 0)
-		{
-			SetPlayerPos(tpID, -314.455047, 1774.518432, 43.640625);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to the Piece of Spain.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to the Piece of Spain.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to the Piece of Spain.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Lucky Loans", true) == 0)
-		{
-			SetPlayerPos(tpID, 1322.402587, 352.325286, 19.554687);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Lucky Loans.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Lucky Loans.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Lucky Loans.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Pershing Square", true) ==0)
-		{
-			SetPlayerPos(tpID, 1541.693359, -1674.237060, 13.553047);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Pershing Square.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Pershing Square.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Pershing Square.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Blueberry", true) ==0)
-		{
-			SetPlayerPos(tpID, 254.254531, -62.952922, 1.578125);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Blueberry.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Blueberry.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Blueberry.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "SF Warehouse", true) ==0)
-		{
-			SetPlayerPos(tpID, -2148.424804, -210.551940, 35.320312);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to SF Warehouse.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to SF Warehouse.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to SF Warehouse.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Zombotech", true) ==0)
-		{
-			SetPlayerPos(tpID, -1915.181884, 711.824340, 46.562500);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Zombotech.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Zombotech.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Zombotech.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "SF Boat", true) ==0)
-		{
-			SetPlayerPos(tpID, -1427.532226, 496.689910, 3.039062);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to SF Boat.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to SF Boat.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to SF Boat.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "SF Boat 1", true) ==0)
-		{
-			SetPlayerPos(tpID, -1446.453002, 1502.905883, 1.736648);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to SF Boat 1.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to SF Boat 1.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to SF Boat 1.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "LV Parking Garage", true) ==0)
-		{
-			SetPlayerPos(tpID, 2085.416748, 2421.847167, 10.820312);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to LV Parking Garage.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to LV Parking Garage.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to LV Parking Garage.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "LV Parking Garage 1", true) ==0)
-		{
-			SetPlayerPos(tpID, 1891.206298, 1968.288696, 13.784769);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to LV Parking Garage 1.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to LV Parking Garage 1.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to LV Parking Garage 1.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Loyal Legion", true) ==0)
-		{
-			SetPlayerPos(tpID, -568.2643, -1507.2965, 800.9131);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Loyal Legion.", RemoveUnderScore(playerid));
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Loyal Legion.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Loyal Legion.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
-		}
-		else if(strcmp(locations, "Jefferson Motel", true) ==0)
-		{
-			SetPlayerPos(tpID, 2219.418457, -1146.182250, 25.782423);
-			SetPlayerVirtualWorld(tpID, 0);
-			SetPlayerInterior(tpID, 0);
-			SendClientMessage(tpID, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "Admin %s has teleported you to Jefferson Motel.", RemoveUnderScore(playerid));
-			format(szMessage, sizeof(szMessage), "You have teleported %s to Jefferson Motel.", RemoveUnderScore(tpID));
-			SendClientMessage(playerid, BLUE, szMessage);
-			format(szMessage, sizeof(szMessage), "[AdmCmd]:{FFFFFF} Admin %s has teleported %s to Jefferson Motel.", RemoveUnderScore(playerid), RemoveUnderScore(tpID));
-			AdminMsg(szMessage, 1);
+			p = x;
+			break;
 		}
 	}
-	return 1;
+	if(p == -1) return SysMsg(playerid, "Unable to find teleport name.");
+
+	if(IsPlayerInAnyVehicle(playerid))
+	{
+		new v = GetPlayerVehicleID(playerid);
+		SetVehiclePos(v, Teleports[p][TPx],Teleports[p][TPy],Teleports[p][TPz]);
+		foreach(new i: Player)
+		{
+			if(IsPlayerInVehicle(i, v))
+			{
+				SetPlayerVirtualWorld(i ,Teleports[p][TPVw]);
+				SetPlayerInterior(i, Teleports[p][TPInt]);
+			}
+		}
+		LinkVehicleToInterior(v, Teleports[p][TPInt]);
+		SetVehicleVirtualWorld(v, Teleports[p][TPVw]);
+		SendClientMessageF(playerid, LIBLUE, "You have teleported to %s.", Teleports[p][TPName]);
+		return true;
+	}
+	else
+	{
+		SetPlayerPos(playerid,Teleports[p][TPx],Teleports[p][TPy],Teleports[p][TPz]);
+		SetPlayerFacingAngle(playerid,Teleports[p][TPa]);
+		SetPlayerInterior(playerid,Teleports[p][TPInt]);
+		SetPlayerVirtualWorld(playerid,Teleports[p][TPVw]);
+		SendClientMessageF(playerid, LIBLUE, "You have teleported to %s.", Teleports[p][TPName]);
+		return true;
+	}
 }
 CMD:aduty(playerid, params[])
 {
@@ -1999,6 +1902,41 @@ Dialog:PasswordDialog(playerid, response, listitem, inputtext[])
 	{
 		SendClientMessage(playerid, WHITE, "Your password must be at least 5 characters!");
 		Dialog_Show(playerid, PasswordDialog, DIALOG_STYLE_PASSWORD, "Change Password", "Please change your password", "Okay", "");
+	}
+	return true;
+}
+Dialog:TPList(playerid, response, listitem, inputtext[])
+{
+	if(!response)
+	{
+		DeletePVar(playerid, "tpVID");
+		return true;
+	}
+	if(GetPVarInt(playerid, "tpVID") >= 1)
+	{
+		new vid = GetPVarInt(playerid, "tpVID");
+		SetVehiclePos(vid, Teleports[listitem][TPx],Teleports[listitem][TPy],Teleports[listitem][TPz]);
+		foreach(new p: Player)
+		{
+			if(IsPlayerInVehicle(p, vid) )
+			{
+				SetPlayerVirtualWorld(p ,Teleports[listitem][TPVw]);
+				SetPlayerInterior(p, Teleports[listitem][TPInt]);
+			}
+		}
+		LinkVehicleToInterior(vid, Teleports[listitem][TPVw]);
+		SetVehicleVirtualWorld(vid, Teleports[listitem][TPInt]);
+		SendClientMessageF(playerid, LIBLUE, "Admin %s has teleported you to %s.",RemoveUnderScore(playerid),Teleports[listitem][TPName]);
+		DeletePVar(playerid, "tpVID");
+	}
+	else
+	{
+		SetPlayerPos(playerid,Teleports[listitem][TPx],Teleports[listitem][TPy],Teleports[listitem][TPz]);
+		SetPlayerFacingAngle(playerid,Teleports[listitem][TPa]);
+		SetPlayerInterior(playerid,Teleports[listitem][TPInt]);
+		SetPlayerVirtualWorld(playerid,Teleports[listitem][TPVw]);
+		SendClientMessageF(playerid, LIBLUE, "You have teleported to %s", Teleports[listitem][TPName]);
+		DeletePVar(playerid, "tpVID");
 	}
 	return true;
 }
