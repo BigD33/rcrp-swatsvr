@@ -251,6 +251,53 @@ new WeaponDamage[55][WeaponDamageInfo] =
 	{53,			5.0,			"Drowned"},
 	{54,			0.0,			"Splat"} // default
 };
+enum HOUSE_INSIDEIDS
+{
+	Float:InsideX,
+	Float:InsideY,
+	Float:InsideZ,
+	Float:InsideAng,
+	InsideInt,
+};
+new InsideIDs[][HOUSE_INSIDEIDS] =
+{
+	{0.0, 				 0.0, 				0.0, 			0.0, 			0},
+	{2260.268798,		-1136.082885, 		1050.632812, 	270.0, 			10},
+	{2269.389404,		-1210.436767, 		1047.562500, 	90.0, 			10},
+	{2365.161865,		-1135.018554, 		1050.875000, 	0.0, 			8},
+	{2237.725097,		-1080.449096, 		1049.023437, 	0.0, 			2},
+	{2308.8132,			-1212.4036, 		1054.2324,		356.1585, 		7},
+	{2283.0662,			-1140.0355, 		1054.6497, 		356.1927, 		12},
+	{2317.780273,		-1025.810302,		1050.217773, 	0.0,			9},
+	{244.0935,			304.8319,			1003.7830, 		270.2329, 		2},
+	{2324.3450,			-1148.4189,			1042.7522, 		358.9410, 		13},
+	{1298.597900,		-796.083007, 		1084.0, 		0.0, 			5},
+	{0.0, 				0.0, 				0.0, 			0.0, 			0},
+	{2333.1650,			-1076.7365,			1054.6212, 		360.0,			7},
+	{1198.1999,			-1514.80004,		1001.0,			0.0, 			1},
+	{2124.100097,		-1524.6999, 		1059.0, 		0.0, 			15},
+	{168.69999,			-1483.0, 			994.4,			0.0, 			10},
+	{-746.5,			-1803.40002, 		997.7, 			0.0, 			6},
+	{-2062.503,			-2534.738, 			1126.313, 		0.0, 			1},
+	{2513.018310,		-1729.234863, 		778.637084, 	90.0, 			1},
+	{226.4993,			1240.0232,			1086.8820, 		90.0, 			3},
+	{386.7968,			1471.7528,			1085.7948, 		90.1540, 		16},
+	{376.8104,			1417.4617,			1085.0793, 		90.0, 			16},
+	{328.0845,			1477.9464,			1090.7213, 		360.0, 			16},
+	{447.0988,			1397.4469,			1089.7393, 		360.0, 			3},
+	{226.9030,			1114.2294,			1073.2595, 		270.0, 			6},
+	{261.0563,			1284.4709,			1084.2181, 		360.0, 			5},
+	{140.2491,			1366.6575,			1094.3301, 		360.0, 			6},
+	{-42.5619,			1405.7565,			1079.6656, 		360.0, 			9},
+	{83.0829,			1322.9063,			1097.1646, 		360.0, 			10},
+	{260.9045,			1237.8760,			1088.4474, 		360.0, 			10},
+	{2196.6711,			-1204.3594,			1044.7247, 		90.0, 			7},
+	{1382.9319,			-22.2719, 			1000.9235, 		271.4977, 		1},
+	{383.6137,			1663.3691,			2031.8184,		0.0, 			1},
+	{1770.0175,			-2532.5918, 		1014.0912,		270.3729, 		1},
+	{1720.7177,			-2543.0452, 		1013.6408,		358.1019, 		2},
+	{1745.6473,			-2502.8901, 		1013.8965,		357.8045, 		3}
+};
 #define SendClientMessageF(%1,%2,%3) \
 	SendClientMessage(%1, %2, (format(szMessage, sizeof(szMessage), %3), szMessage))
 
@@ -1953,6 +2000,20 @@ CMD:afix(playerid, params[])
 	RepairVehicle(GetPlayerVehicleID(playerid));
 	SendClientMessage(playerid, 0xFFFFFFFF, "Your vehicle has been repaired!");
 	return 1;
+}
+CMD:int(playerid, params[])
+{
+	new int;
+	if(sscanf(params, "i", int)) return SyntaxMsg(playerid, "[Usage]: /int [Interior ID from the Silver Trading list]");
+	if(int <= 0 || int > sizeof(InsideIDs)) return SysMsg(playerid, "Invalid interior");
+
+	SetPlayerPos(playerid, InsideIDs[int][InsideX], InsideIDs[int][InsideY], InsideIDs[int][InsideZ]);
+	SetPlayerFacingAngle(playerid, InsideIDs[int][InsideAng]);
+	SetPlayerInterior(playerid, InsideIDs[int][InsideInt]);
+
+	format(szMessage, sizeof(szMessage), "%s has teleported to Int %i. (/int)", RemoveUnderScore(playerid), int);
+	SendClientMessageToAll(WHITE, szMessage);
+	return true;
 }
 CMD:tp(playerid) return cmd_teleport(playerid);
 CMD:teleport(playerid)
