@@ -608,16 +608,6 @@ public OnPlayerText(playerid, text[])
 	return 0;
 }
 
-public OnPlayerCommandText(playerid, cmdtext[])
-{
-	if (strcmp("/mycommand", cmdtext, true, 10) == 0)
-	{
-		// Do something here
-		return 1;
-	}
-	return 0;
-}
-
 public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
 {
 	return 1;
@@ -1278,30 +1268,13 @@ CMD:spec(playerid, params[])
 	TogglePlayerSpectating(playerid, 1);
 	IsSpectating[playerid] = 1;
 	WhoSpectating[playerid] = id;
-	if(IsPlayerInAnyVehicle(id))
-	{
-		if(GetPlayerInterior(id) > 0)
-		{
-			SetPlayerInterior(playerid,GetPlayerInterior(id));
-		}
-		if(GetPlayerVirtualWorld(id) > 0)
-		{
-			SetPlayerVirtualWorld(playerid,GetPlayerVirtualWorld(id));
-		}
-		PlayerSpectateVehicle(playerid,GetPlayerVehicleID(id));
-	}
-	else
-	{
-		if(GetPlayerInterior(id) > 0)
-		{
-			SetPlayerInterior(playerid,GetPlayerInterior(id));
-		}
-		if(GetPlayerVirtualWorld(id) > 0)
-		{
-			SetPlayerVirtualWorld(playerid,GetPlayerVirtualWorld(id));
-		}
-		PlayerSpectatePlayer(playerid, id);
-	}
+
+	SetPlayerInterior(playerid, GetPlayerInterior(id));
+	SetPlayerVirtualWorld(playerid, GetPlayerVirtualWorld(id));
+
+	if(IsPlayerInAnyVehicle(id)) PlayerSpectateVehicle(playerid,GetPlayerVehicleID(id));
+	else PlayerSpectatePlayer(playerid, id);
+
 	SendClientMessageF(playerid, GREY, "You are now spectating %s.", pName(id));
 	return 1;
 }
@@ -1406,17 +1379,12 @@ CMD:veh(playerid, params[])
 	if(vehicle < 400 || vehicle > 611) return SendClientMessage(playerid, RED, "[Error] Invalid vehicle name.");
 
 	new Float:a;
-	GetPlayerFacingAngle(playerid, a);
+	GetPlayerFacingAngle(playerid, a); 
 	GetPlayerPos(playerid, pPos[0], pPos[1], pPos[2]);
 
-	if(IsPlayerInAnyVehicle(playerid) == 1)
-	{
-		GetXYInFrontOfPlayer(playerid, pPos[0], pPos[1], 8);
-	}
-	else
-	{
-		GetXYInFrontOfPlayer(playerid, pPos[0], pPos[1], 5);
-	}
+	if(IsPlayerInAnyVehicle(playerid)) GetXYInFrontOfPlayer(playerid, pPos[0], pPos[1], 8);
+	else GetXYInFrontOfPlayer(playerid, pPos[0], pPos[1], 5);
+
 	CreateVehicle(vehicle, pPos[0], pPos[1], pPos[2] , a+90, colour1, colour2, -1);
 	LinkVehicleToInterior(vehicle, GetPlayerInterior(playerid));
 	vehiclecount++;
@@ -1885,8 +1853,7 @@ CMD:afix(playerid, params[])
 }
 CMD:tp(playerid, params[])
 {
-	new tpID,
-		locations[32];
+	new tpID, locations[32];
 
 	if(IsPlayerAdminLevel(playerid, 1))
 	{
@@ -2018,7 +1985,7 @@ CMD:tp(playerid, params[])
 			AdminMsg(szMessage, 1);
 		}
 		else if(strcmp(locations, "SF Boat", true) ==0)
-			{
+		{
 			SetPlayerPos(tpID, -1427.532226, 496.689910, 3.039062);
 			SetPlayerVirtualWorld(tpID, 0);
 			SetPlayerInterior(tpID, 0);
@@ -2054,7 +2021,7 @@ CMD:tp(playerid, params[])
 			AdminMsg(szMessage, 1);
 		}
 		else if(strcmp(locations, "LV Parking Garage 1", true) ==0)
-		 {
+		{
 			SetPlayerPos(tpID, 1891.206298, 1968.288696, 13.784769);
 			SetPlayerVirtualWorld(tpID, 0);
 			SetPlayerInterior(tpID, 0);
