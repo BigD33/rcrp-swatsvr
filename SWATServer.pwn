@@ -47,22 +47,6 @@
 
 #define PRESSED(%0) \
 	(((newkeys & (%0)) == (%0)) && ((oldkeys & (%0)) != (%0)))
-	
-forward CheckAccount(playerid);
-forward CreateAccount(playerid, name[], AdminRegistered[], AdminIP[]);
-forward LoadPlayerData(playerid);
-forward IsPlayerAdminLevel(playerid, adminlevel);
-forward SkinSet(playerid);
-forward GMX();
-forward SaveData();
-forward LoadInteriors();
-forward LoadVehicles();
-forward LoadTeleports();
-forward PlayerToPoint(Float:radi, playerid, Float:x, Float:y, Float:z);
-forward CloseMessage(playerid, colour, string[]);
-forward CreateInterior(playerid, interiorid, interiorvw, Float: interiorx, Float: interiory, Float: interiorz, name[]);
-forward CreateVehicleEx(modelid, Float: vehx, Float: vehy, Float: vehz, Float: veha, colour1, colour2);
-forward OnServerLoad();
 
 main()
 {
@@ -152,6 +136,7 @@ new aVehicleNames[][] =
 #define SendClientMessageF(%1,%2,%3) \
 	SendClientMessage(%1, %2, (format(szMessage, sizeof(szMessage), %3), szMessage))
 
+#define RCRP::%0(%1) forward %0(%1); public %0(%1)
 enum pData
 {
 	AccID,
@@ -441,7 +426,7 @@ public OnPlayerDisconnect(playerid, reason)
 	SavePlayerData(playerid);
 	return 1;
 }
-public CreateVehicleEx(modelid, Float: vehx, Float: vehy, Float: vehz, Float: veha, colour1, colour2)
+RCRP::CreateVehicleEx(modelid, Float: vehx, Float: vehy, Float: vehz, Float: veha, colour1, colour2)
 {
 	new vehicle = GetNextVehicleID();
 	
@@ -467,7 +452,7 @@ public CreateVehicleEx(modelid, Float: vehx, Float: vehy, Float: vehz, Float: ve
 	mysql_tquery(ConnectionHandle, szQuery);
 	return true;
 }
-public CreateInterior(playerid, interiorid, interiorvw, Float: interiorx, Float: interiory, Float: interiorz, name[])
+RCRP::CreateInterior(playerid, interiorid, interiorvw, Float: interiorx, Float: interiory, Float: interiorz, name[])
 {
 	new Float: bPos[3];
 	new interior = GetNextInteriorID();
@@ -500,7 +485,7 @@ public CreateInterior(playerid, interiorid, interiorvw, Float: interiorx, Float:
 	mysql_tquery(ConnectionHandle, szQuery);
 	return true;
 }
-public CheckAccount(playerid)
+RCRP::CheckAccount(playerid)
 {
 	if(playerid != INVALID_PLAYER_ID)
 	{
@@ -521,7 +506,7 @@ public CheckAccount(playerid)
 	}
 	return 1;
 }
-public SaveData()
+RCRP::SaveData()
 {
 	foreach(Player, i)
 	{
@@ -531,7 +516,7 @@ public SaveData()
 	SaveVehicles();
 	return true;
 }
-public CloseMessage(playerid, colour, string[])
+RCRP::CloseMessage(playerid, colour, string[])
 {
 	new Float: PlayerX, Float: PlayerY, Float: PlayerZ;
 	foreach(Player, i)
@@ -568,7 +553,7 @@ public CloseMessage(playerid, colour, string[])
 	}
 	return 1;
 }
-public CreateAccount(playerid, name[], AdminRegistered[], AdminIP[])
+RCRP::CreateAccount(playerid, name[], AdminRegistered[], AdminIP[])
 {
 	if(playerid != INVALID_PLAYER_ID)
 	{
@@ -780,7 +765,7 @@ public OnPlayerClickPlayer(playerid, clickedplayerid, source)
 {
 	return 1;
 }
-public LoadPlayerData(playerid)
+RCRP::LoadPlayerData(playerid)
 {
 	new rows, fields;
 	cache_get_data(rows, fields, ConnectionHandle);
@@ -803,7 +788,7 @@ public LoadPlayerData(playerid)
 	}
 	return 1;
 }
-public LoadInteriors()
+RCRP::LoadInteriors()
 {
 	new rows, fields;
 	cache_get_data(rows, fields, ConnectionHandle);
@@ -836,7 +821,7 @@ public LoadInteriors()
 	}
 	return 1;
 }
-public LoadVehicles()
+RCRP::LoadVehicles()
 {
 	new rows, fields;
 	cache_get_data(rows, fields, ConnectionHandle);
@@ -861,7 +846,7 @@ public LoadVehicles()
 	}
 	return 1;
 }
-public LoadTeleports()
+RCRP::LoadTeleports()
 {
 	new rows, fields;
 	cache_get_data(rows, fields, ConnectionHandle);
@@ -881,22 +866,22 @@ public LoadTeleports()
 	}
 	return 1;
 }
-public SkinSet(playerid)
+RCRP::SkinSet(playerid)
 {
 	SetPlayerSkin(playerid, pVariables[playerid][SkinID]);
 	return 1;
 }
-public GMX()
+RCRP::GMX()
 {
 	SendRconCommand("gmx");
 	return 1;
 }
-public IsPlayerAdminLevel(playerid, adminlevel)
+RCRP::IsPlayerAdminLevel(playerid, adminlevel)
 {
 	if(IsPlayerAdmin(playerid) || pVariables[playerid][AdminLevel] >= adminlevel) return 1;
 	return 0;
 }
-public PlayerToPoint(Float:radi, playerid, Float:x, Float:y, Float:z)
+RCRP::PlayerToPoint(Float:radi, playerid, Float:x, Float:y, Float:z)
 {
 	if(IsPlayerConnected(playerid))
 	{
