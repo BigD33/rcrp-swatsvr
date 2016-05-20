@@ -1,21 +1,21 @@
-// This is a comment
-// uncomment the line below if you want to write a filterscript
-//#define FILTERSCRIPT
-
 #include <a_samp>
+
+#undef MAX_PLAYERS
+#undef MAX_VEHICLES
+#define MAX_PLAYERS (50)
+#define MAX_VEHICLES (100)
+
 #include <a_mysql>
 #include <zcmd>
 #include <sscanf2>
 #include <foreach>
 #include <streamer>
+#include <EasyDialog>
 
 #define             mysql_host          "127.0.0.1"
 #define             mysql_user          "root"
 #define             mysql_password      ""
 #define             mysql_database      "swatserver"
-
-#define             DIALOG_LOGIN                1
-#define             DIALOG_CHANGE_PASSWORD      2
 
 #define             WHITE               0xFFFFFFFF
 #define             GREY                0x808080FF
@@ -42,8 +42,8 @@
 
 #define             THREAD_NO_RESULT        0
 
-#define             MAX_INTERIORS           512
-#define             MAX_TELEPORTS           512
+#define             MAX_INTERIORS           115
+#define             MAX_TELEPORTS           115
 
 #define AdminOnly   "You are not authorised to use this command."
 
@@ -69,7 +69,7 @@ forward OnServerLoad();
 main()
 {
 	print("\n----------------------------------");
-	print("SWAT Server by BigD");
+	print("SWAT Server by BigD and t0mbXD :^)");
 	print("----------------------------------\n");
 }
 native WP_Hash(buffer[], len, const str[]);
@@ -397,9 +397,9 @@ public OnGameModeInit()
 	DisableInteriorEnterExits();
 	ShowPlayerMarkers(PLAYER_MARKERS_MODE_OFF);
 	
-	mysql_function_query(ConnectionHandle, "SELECT * FROM interiors", false, "LoadInteriors", "i", THREAD_NO_RESULT);
-	mysql_function_query(ConnectionHandle, "SELECT * FROM vehicles", false, "LoadVehicles", "i", THREAD_NO_RESULT);
-	mysql_function_query(ConnectionHandle, "SELECT * FROM teleports", false, "LoadTeleports", "i", THREAD_NO_RESULT);
+	mysql_tquery(ConnectionHandle, "SELECT * FROM interiors", "LoadInteriors", "i");
+	mysql_tquery(ConnectionHandle, "SELECT * FROM vehicles", "LoadVehicles", "i");
+	mysql_tquery(ConnectionHandle, "SELECT * FROM teleports", "LoadTeleports", "i");
 	
 	swatgate1 = CreateDynamicObject(976, -354.50000, 1732.00000, 41.80000,   0.00000, 0.00000, 90.00000);
 	swatext = CreateObject(19353, -313.7413, 1774.9657, 45.2813,   0.00000, 0.00000, 38.52000);
@@ -702,7 +702,7 @@ public CheckAccount(playerid)
 			pVariables[playerid][AccID] = cache_get_field_content_int(0, "AccID");
 			cache_get_field_content(0, "Password", pVariables[playerid][Password], ConnectionHandle, 129);
 			format(szMessage,sizeof(szMessage),"{FFFFFF}Welcome back, %s\n\nPlease enter your password below to login:", RemoveUnderScore(playerid));
-			ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "{FFFFFF}SWAT Training Server - Login", szMessage, "Login", "Exit");
+			Dialog_Show(playerid, LoginDialog, DIALOG_STYLE_PASSWORD, "{FFFFFF}SWAT Training Server - Login", szMessage, "Login", "Exit");
 		}
 		else
 		{
@@ -967,54 +967,6 @@ public OnVehicleStreamOut(vehicleid, forplayerid)
 {
 	return 1;
 }
-
-public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
-{
-	switch(dialogid)
-	{
-		case DIALOG_LOGIN:
-		{
-			if(!response) return Kick(playerid);
-
-			if(strlen(inputtext) >= 3)
-			{
-				new wpPass[129];
-				WP_Hash(wpPass, sizeof(wpPass), inputtext);
-				if(strmatch(wpPass, pVariables[playerid][Password]))
-				{
-					format(szQuery, sizeof(szQuery), "SELECT * FROM `accounts` WHERE `Username` = '%s'", pName(playerid));
-					mysql_tquery(ConnectionHandle, szQuery, "LoadPlayerData", "i", playerid);
-				}
-				else if(passAtt[playerid] <= 2)
-				{
-					passAtt[playerid]++;
-					format(szMessage, sizeof(szMessage), "\tIncorrect Password! [%d/3]\nPlease enter your password below!", passAtt[playerid]);
-					ShowPlayerDialog(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "LOGIN", szMessage, "Login", "");
-				}
-				else Kick(playerid);
-			}
-		}
-		case DIALOG_CHANGE_PASSWORD:
-		{
-			if(!response) return Kick(playerid);
-
-			if(strlen(inputtext) >= 5)
-			{
-				WP_Hash(pVariables[playerid][Password], 129, inputtext);
-				SendClientMessageF(playerid, WHITE, "Your password has been changed to %s.", inputtext);
-				pVariables[playerid][FirstLogin] = 1;
-				SavePlayerData(playerid);
-			}
-			else
-			{
-				SendClientMessage(playerid, WHITE, "Your password must be at least 5 characters!");
-				ShowPlayerDialog(playerid, DIALOG_CHANGE_PASSWORD, DIALOG_STYLE_PASSWORD, "Change Password", "Please change your password", "Okay", "");
-			}
-		}
-	}
-	return 1;
-}
-
 public OnPlayerClickPlayer(playerid, clickedplayerid, source)
 {
 	return 1;
@@ -1038,7 +990,7 @@ public LoadPlayerData(playerid)
 	
 	if(pVariables[playerid][FirstLogin] == 0)
 	{
-		ShowPlayerDialog(playerid, DIALOG_CHANGE_PASSWORD, DIALOG_STYLE_PASSWORD, "Change Password", "Please change your password", "Okay", "");
+		Dialog_Show(playerid, PasswordDialog, DIALOG_STYLE_PASSWORD, "Change Password", "Please change your password", "Okay", "");
 	}
 	return 1;
 }
@@ -1137,21 +1089,21 @@ public IsPlayerAdminLevel(playerid, adminlevel)
 }
 public PlayerToPoint(Float:radi, playerid, Float:x, Float:y, Float:z)
 {
-		if(IsPlayerConnected(playerid))
+	if(IsPlayerConnected(playerid))
+	{
+		new Float:oldposx, Float:oldposy, Float:oldposz;
+		new Float:tempposx, Float:tempposy, Float:tempposz;
+		GetPlayerPos(playerid, oldposx, oldposy, oldposz);
+		tempposx = (oldposx -x);
+		tempposy = (oldposy -y);
+		tempposz = (oldposz -z);
+		//printf("DEBUG: X:%f Y:%f Z:%f",posx,posy,posz);
+		if (((tempposx < radi) && (tempposx > -radi)) && ((tempposy < radi) && (tempposy > -radi)) && ((tempposz < radi) && (tempposz > -radi)))
 		{
-				new Float:oldposx, Float:oldposy, Float:oldposz;
-				new Float:tempposx, Float:tempposy, Float:tempposz;
-				GetPlayerPos(playerid, oldposx, oldposy, oldposz);
-				tempposx = (oldposx -x);
-				tempposy = (oldposy -y);
-				tempposz = (oldposz -z);
-				//printf("DEBUG: X:%f Y:%f Z:%f",posx,posy,posz);
-				if (((tempposx < radi) && (tempposx > -radi)) && ((tempposy < radi) && (tempposy > -radi)) && ((tempposz < radi) && (tempposz > -radi)))
-				{
-						return true;
-				}
+			return true;
 		}
-		return false;
+	}
+	return false;
 }
 GetVehicleModelIDFromName(vname[])
 {
@@ -1205,7 +1157,7 @@ stock GetXYInFrontOfPlayer(playerid, &Float:x2, &Float:y2, Float:distance)
 	x2 += (distance * floatsin(-a, degrees));
 	y2 += (distance * floatcos(-a, degrees));
 }
-stock SWAT(playerid)
+stock MakeSWAT(playerid)
 {
 	GivePlayerWeapon(playerid, 31, 1000);
 	GivePlayerWeapon(playerid, 34, 1000);
@@ -1218,7 +1170,7 @@ stock SWAT(playerid)
 	SetPlayerHealth(playerid, 100);
 	return 1;
 }
-stock Criminal(playerid)
+stock MakeCriminal(playerid)
 {
 	GivePlayerWeapon(playerid, 24, 1000);
 	GivePlayerWeapon(playerid, 30, 1000);
@@ -2420,15 +2372,54 @@ CMD:swat(playerid, params[])
 {
 	format(szMessage, sizeof(szMessage), "[SWAT Duty]: %s is now on SWAT duty.", RemoveUnderScore(playerid));
 	AdminMsg(szMessage, 1);
-	SWAT(playerid);
+	MakeSWAT(playerid);
 	return 1;
 }
 CMD:criminal(playerid, params[])
 {
 	format(szMessage, sizeof(szMessage), "[Criminal Mode]: %s has activated criminal mode.", RemoveUnderScore(playerid));
 	AdminMsg(szMessage, 1);
-	Criminal(playerid);
+	MakeCriminal(playerid);
 	return 1;
 }
+//dialog responses
+Dialog:LoginDialog(playerid, response, listitem, inputtext[])
+{
+	if(!response) return Kick(playerid);
+	if(strlen(inputtext) >= 3)
+	{
+		new wpPass[129];
+		WP_Hash(wpPass, sizeof(wpPass), inputtext);
+		if(strmatch(wpPass, pVariables[playerid][Password]))
+		{
+			format(szQuery, sizeof(szQuery), "SELECT * FROM `accounts` WHERE `Username` = '%s'", pName(playerid));
+			mysql_tquery(ConnectionHandle, szQuery, "LoadPlayerData", "i", playerid);
+		}
+		else if(passAtt[playerid] <= 2)
+		{
+			passAtt[playerid]++;
+			format(szMessage, sizeof(szMessage), "\tIncorrect Password! [%d/3]\nPlease enter your password below!", passAtt[playerid]);
+			Dialog_Show(playerid, LoginDialog, DIALOG_STYLE_PASSWORD, "LOGIN", szMessage, "Login", "");
+		}
+		else Kick(playerid);
+	}
+	return true;
+}
+Dialog:PasswordDialog(playerid, response, listitem, inputtext[])
+{
+	if(!response) return Kick(playerid);
 
-
+	if(strlen(inputtext) >= 5)
+	{
+		WP_Hash(pVariables[playerid][Password], 129, inputtext);
+		SendClientMessageF(playerid, WHITE, "Your password has been changed to %s.", inputtext);
+		pVariables[playerid][FirstLogin] = 1;
+		SavePlayerData(playerid);
+	}
+	else
+	{
+		SendClientMessage(playerid, WHITE, "Your password must be at least 5 characters!");
+		Dialog_Show(playerid, PasswordDialog, DIALOG_STYLE_PASSWORD, "Change Password", "Please change your password", "Okay", "");
+	}
+	return true;
+}
