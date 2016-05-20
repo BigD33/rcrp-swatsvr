@@ -40,8 +40,6 @@
 #define             DARKGREEN           0x00aa00FF
 #define             RADIOBROWN          0x967100FF
 
-#define             THREAD_NO_RESULT        0
-
 #define             MAX_INTERIORS           115
 #define             MAX_TELEPORTS           115
 
@@ -153,16 +151,6 @@ new aVehicleNames[][] =
 
 #define SendClientMessageF(%1,%2,%3) \
 	SendClientMessage(%1, %2, (format(szMessage, sizeof(szMessage), %3), szMessage))
-	
-/*#define fSendClientMessage(%1,%2,%3) \
-	SendClientMessage(%1, %2, (format(szMessage, sizeof(szMessage), %3), szMessage))*/
-/*
-
-Example:
-
-SendClientMessageF(playerid, -1, "%s", money);
-
-*/
 
 enum pData
 {
@@ -401,7 +389,7 @@ public OnPlayerConnect(playerid)
 	GetPlayerIp(playerid, pVariables[playerid][LatestIP], 16);
 	SavePlayerData(playerid);
 	SetPlayerColor(playerid, WHITE);
-	format(szQuery,sizeof(szQuery),"SELECT * FROM `accounts` WHERE `Username` = '%s'", pName(playerid));
+	mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "SELECT * FROM `accounts` WHERE `Username` = '%s'", pName(playerid));
 	mysql_tquery(ConnectionHandle, szQuery, "CheckAccount", "i", playerid);
 	
 	SendClientMessageF(playerid, YELLOW, "Welcome to the SWAT Training Server, {F5FF00}%s.", RemoveUnderScore(playerid));
@@ -468,7 +456,7 @@ public CreateVehicleEx(modelid, Float: vehx, Float: vehy, Float: vehz, Float: ve
 	vVariables[vehicle][ScriptID] = CreateVehicle(vVariables[vehicle][ModelID], vVariables[vehicle][vPos][0], vVariables[vehicle][vPos][1], vVariables[vehicle][vPos][2], vVariables[vehicle][vPos][3], vVariables[vehicle][Colour1], vVariables[vehicle][Colour2], -1);
 	
 	vVariables[vehicle][VehicleLoaded] = 1;
-	format(szQuery, sizeof(szQuery), "INSERT INTO vehicles (ModelID, VehX, VehY, VehZ, VehA, Colour1, Colour2) VALUES ('%d', '%f', '%f', '%f', '%f', '%d', '%d')",
+	mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "INSERT INTO vehicles (ModelID, VehX, VehY, VehZ, VehA, Colour1, Colour2) VALUES ('%d', '%f', '%f', '%f', '%f', '%d', '%d')",
 	vVariables[vehicle][ModelID],
 	vVariables[vehicle][vPos][0],
 	vVariables[vehicle][vPos][1],
@@ -476,7 +464,7 @@ public CreateVehicleEx(modelid, Float: vehx, Float: vehy, Float: vehz, Float: ve
 	vVariables[vehicle][vPos][3],
 	vVariables[vehicle][Colour1],
 	vVariables[vehicle][Colour2]);
-	mysql_function_query(ConnectionHandle, szQuery, true, "OnQueryFinish", "i", vehicle);
+	mysql_tquery(ConnectionHandle, szQuery);
 	return true;
 }
 public CreateInterior(playerid, interiorid, interiorvw, Float: interiorx, Float: interiory, Float: interiorz, name[])
@@ -499,7 +487,7 @@ public CreateInterior(playerid, interiorid, interiorvw, Float: interiorx, Float:
 	iVariables[interior][Label] = CreateDynamic3DTextLabel(iVariables[interior][LabelText], YELLOW, iVariables[interior][ePos][0], iVariables[interior][ePos][1], iVariables[interior][ePos][2]+0.8, 100, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, iVariables[interior][ExteriorVW], iVariables[interior][ExteriorID], -1, 15);
 
 	iVariables[interior][InteriorLoaded] = 1;
-	format(szQuery, sizeof(szQuery), "INSERT INTO interiors (InteriorID, InteriorVW, ExteriorID, ExteriorVW, iPosX, iPosY, iPosZ, ePosX, ePosY, ePosZ, LabelText) VALUES ('%d', '%d', '0', '0', '%f', '%f', '%f', '%f', '%f', '%f', '%s')",
+	mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "INSERT INTO interiors (InteriorID, InteriorVW, ExteriorID, ExteriorVW, iPosX, iPosY, iPosZ, ePosX, ePosY, ePosZ, LabelText) VALUES ('%d', '%d', '0', '0', '%f', '%f', '%f', '%f', '%f', '%f', '%s')",
 	iVariables[interior][InteriorID],
 	iVariables[interior][InteriorVW],
 	iVariables[interior][iPos][0],
@@ -509,7 +497,7 @@ public CreateInterior(playerid, interiorid, interiorvw, Float: interiorx, Float:
 	iVariables[interior][ePos][1],
 	iVariables[interior][ePos][2],
 	iVariables[interior][LabelText]);
-	mysql_function_query(ConnectionHandle, szQuery, true, "OnQueryFinish", "i", interior);
+	mysql_tquery(ConnectionHandle, szQuery);
 	return true;
 }
 public CheckAccount(playerid)
@@ -596,7 +584,7 @@ public CreateAccount(playerid, name[], AdminRegistered[], AdminIP[])
 		{
 			new hashpass[129];
 			WP_Hash(hashpass, sizeof(hashpass), "changeme");
-			format(szQuery, sizeof(szQuery), "INSERT INTO `accounts` (Username, Password, AdminRegistered, AdminIP) VALUES ('%s', '%s', '%s', '%s')", name, hashpass, AdminRegistered, AdminIP);
+			mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "INSERT INTO `accounts` (Username, Password, AdminRegistered, AdminIP) VALUES ('%e', '%e', '%e', '%e')", name, hashpass, AdminRegistered, AdminIP);
 			mysql_tquery(ConnectionHandle, szQuery);
 			SendClientMessageF(playerid, WHITE, "The account %s has been created, password is changeme.", name);
 		}
@@ -1023,7 +1011,7 @@ stock AdminMsg(string[], level)
 }
 stock IsNameTaken(name[])
 {
-	format(szQuery, sizeof(szQuery), "SELECT * FROM accounts WHERE Username = '%s'", name);
+	mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "SELECT * FROM accounts WHERE Username = '%s'", name);
 	new Cache:result =  mysql_query(ConnectionHandle, szQuery, true);
 
 	if(cache_num_rows()){cache_delete(result); return 1;}
@@ -1032,7 +1020,7 @@ stock IsNameTaken(name[])
 }
 stock IsInteriorTaken(name[])
 {
-	format(szQuery, sizeof(szQuery), "SELECT * FROM interiors WHERE LabelText = '%s'", name);
+	mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "SELECT * FROM interiors WHERE LabelText = '%s'", name);
 	new Cache:result =  mysql_query(ConnectionHandle, szQuery, true);
 
 	if(cache_num_rows()){cache_delete(result); return 1;}
@@ -1111,7 +1099,7 @@ stock strmatch(const String1[], const String2[])
 }
 stock SavePlayerData(playerid)
 {
-	format(szQuery, sizeof(szQuery), "UPDATE accounts SET SkinID = %d, AdminLevel = %d, FirstLogin = %d, Password = '%s', LatestIP = '%s', AdminRegistered = '%s' WHERE AccID = %d",
+	mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "UPDATE accounts SET SkinID = %d, AdminLevel = %d, FirstLogin = %d, Password = '%s', LatestIP = '%s', AdminRegistered = '%s' WHERE AccID = %d",
 	pVariables[playerid][SkinID],
 	pVariables[playerid][AdminLevel],
 	pVariables[playerid][FirstLogin],
@@ -1119,14 +1107,14 @@ stock SavePlayerData(playerid)
 	pVariables[playerid][LatestIP],
 	pVariables[playerid][AdminReg],
 	pVariables[playerid][AccID]);
-	mysql_function_query(ConnectionHandle, szQuery, true, "OnQueryFinish", "i", THREAD_NO_RESULT);
+	mysql_tquery(ConnectionHandle, szQuery);
 	return 1;
 }
 stock SaveInteriors()
 {
 	for(new i = 0; i < MAX_INTERIORS; i++)
 	{
-		format(szQuery, sizeof(szQuery), "UPDATE interiors SET InteriorID = %d, InteriorVW = %d, ExteriorID = %d, ExteriorVW = %d, iPosX = %f, iPosY = %f, iPosZ = %f, ePosX = %f, ePosY = %f, ePosZ = %f, LabelText = '%s' WHERE ID = %d",
+		mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "UPDATE interiors SET InteriorID = %d, InteriorVW = %d, ExteriorID = %d, ExteriorVW = %d, iPosX = %f, iPosY = %f, iPosZ = %f, ePosX = %f, ePosY = %f, ePosZ = %f, LabelText = '%s' WHERE ID = %d",
 		iVariables[i][InteriorID],
 		iVariables[i][InteriorVW],
 		iVariables[i][ExteriorID],
@@ -1139,7 +1127,7 @@ stock SaveInteriors()
 		iVariables[i][ePos][2],
 		iVariables[i][LabelText],
 		iVariables[i][ID]);
-		mysql_function_query(ConnectionHandle, szQuery, true, "OnQueryFinish", "i", THREAD_NO_RESULT);
+		mysql_tquery(ConnectionHandle, szQuery);
 		return 1;
 	}
 	return true;
@@ -1148,7 +1136,7 @@ stock SaveVehicles()
 {
 	for(new i = 0; i < MAX_VEHICLES; i++)
 	{
-		format(szQuery, sizeof(szQuery), "UPDATE vehicles SET ModelID = %d, VehX = %f, VehY = %f, VehZ = %f, VehA = %f, Colour1 = %d, Colour2 = %d WHERE VehicleID = %d",
+		mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "UPDATE vehicles SET ModelID = %d, VehX = %f, VehY = %f, VehZ = %f, VehA = %f, Colour1 = %d, Colour2 = %d WHERE VehicleID = %d",
 		vVariables[i][ModelID],
 		vVariables[i][vPos][0],
 		vVariables[i][vPos][1],
@@ -1157,7 +1145,7 @@ stock SaveVehicles()
 		vVariables[i][Colour1],
 		vVariables[i][Colour2],
 		vVariables[i][VehicleID]);
-		mysql_function_query(ConnectionHandle, szQuery, true, "OnQueryFinish", "i", THREAD_NO_RESULT);
+		mysql_tquery(ConnectionHandle, szQuery);
 		return 1;
 	}
 	return true;
@@ -1166,7 +1154,7 @@ stock SaveTeleports()
 {
 	for(new i = 0; i < MAX_TELEPORTS; i++)
 	{
-		format(szQuery, sizeof(szQuery), "UPDATE teleports SET Name = %s, PosX = %f, PosY = %f, PosZ = %f WHERE id = %d",
+		mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "UPDATE teleports SET Name = %s, PosX = %f, PosY = %f, PosZ = %f WHERE id = %d",
 		tVariables[i][Name],
 		tVariables[i][tPos][0],
 		tVariables[i][tPos][1],
@@ -1775,7 +1763,7 @@ CMD:set(playerid, params[])
 				SendClientMessage(playerid, BLUE, szMessage);
 				SetPlayerName(playerid, amount);
 
-				format(szQuery, sizeof(szQuery), "UPDATE `players` SET `Username`= '%s' WHERE `AccID`= '%d'", amount, pVariables[id][AccID]);
+				mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "UPDATE `players` SET `Username`= '%s' WHERE `AccID`= '%d'", amount, pVariables[id][AccID]);
 				mysql_tquery(ConnectionHandle, szQuery);
 				SetPlayerName(id, amount);
 			}
@@ -1959,7 +1947,7 @@ CMD:afix(playerid, params[])
 	SendClientMessage(playerid, 0xFFFFFFFF, "Your vehicle has been repaired!");
 	return 1;
 }
-command(tp,playerid, params[])
+CMD:tp(playerid, params[])
 {
 	new tpID,
 		locations[32];
@@ -2213,7 +2201,7 @@ Dialog:LoginDialog(playerid, response, listitem, inputtext[])
 		WP_Hash(wpPass, sizeof(wpPass), inputtext);
 		if(strmatch(wpPass, pVariables[playerid][Password]))
 		{
-			format(szQuery, sizeof(szQuery), "SELECT * FROM `accounts` WHERE `Username` = '%s'", pName(playerid));
+			mysql_format(ConnectionHandle, szQuery, sizeof(szQuery), "SELECT * FROM `accounts` WHERE `Username` = '%s'", pName(playerid));
 			mysql_tquery(ConnectionHandle, szQuery, "LoadPlayerData", "i", playerid);
 		}
 		else if(passAtt[playerid] <= 2)
