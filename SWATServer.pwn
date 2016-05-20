@@ -77,11 +77,13 @@ new DoorStatus[7];
 new passAtt[MAX_PLAYERS] = 0;
 new PlayerAnimsLoaded[MAX_PLAYERS];
 new aDuty[MAX_PLAYERS];
-new RubberBullets[MAX_PLAYERS];
-new GunShotWound[MAX_PLAYERS][7];
 new gPlayerUsingLoopingAnim[MAX_PLAYERS];
 new IsSpectating[MAX_PLAYERS];
 new WhoSpectating[MAX_PLAYERS];
+
+//bools
+new bool:RubberBullets[MAX_PLAYERS char] = {false, ...};
+new bool:Dead[MAX_PLAYERS char];
 
 new AdminNames[][] =
 {
@@ -184,6 +186,71 @@ new Teleports[][TELEPORT_DATA] =
 	{"Richman", 355.9613, -1159.7986, 78.0146, 230.0479, 0, 0},
 	{"LS Airport", 1859.1118, -2393.2073, 13.5547, 179.1602, 0, 0}
 };
+enum WeaponDamageInfo
+{
+	WeaponID,
+	Float:WepDamage,
+	GunName[24]
+};
+new WeaponDamage[55][WeaponDamageInfo] =
+{
+	// WeaponID		WeaponDamage  	GunName
+	{0,				7.0,			"Unarmed"},
+	{1,				18.0,			"Brass Knuckles"},
+	{2,				18.0,			"Golf Club"},
+	{3,				18.0,			"Nite Stick"},
+	{4,				30.0,			"Knife"},
+	{5,				18.0,			"Baseball Bat"},
+	{6,				18.0,			"Shovel"},
+	{7,				18.0,			"Pool Cue"},
+	{8,				30.0,			"Katana"},
+	{9,				0.0,			"Chainsaw"},
+	{10,			1.0,			"Purple Dildo"},
+	{12,			1.0,			"Large White Vibrator"},
+	{11,			1.0,			"Small White Vibrator"},
+	{13,			1.0,			"Silver Vibrator"},
+	{14,			0.0,			"Flowers"},
+	{15,			5.0,			"Cane"},
+	{16,			0.0,			"Grenade"},
+	{17,			0.0,			"Tear Gas"},
+	{18,			10.0,			"Molotov Coctail"},
+	{19,			0.0,			"Invalid Weapon"},
+	{20,			0.0,			"Invalid Weapon"},
+	{11,			0.0,			"Invalid Weapon"},
+	{22,			40.0,			"Colt 9mm"},
+	{23,			40.0,			"Silenced Colt 9mm"},
+	{24,			60.0,			"Desert Eagle"},
+	{25,			85.0,			"Shotgun"},
+	{26,			65.0,			"Sawn-off Shotgun"},
+	{27,			35.0,			"Combat Shotgun"},
+	{28,			40.0,			"Micro SMG"},
+	{29,			45.0,			"MP5"},
+	{30,			65.0,			"AK-47"},
+	{31,			60.0,			"M4"},
+	{32,			40.0,			"Tec9"},
+	{33,			80.0,			"Country Rifle"},
+	{34,			100.0,			"Sniper Rifle"},
+	{35,			0.0,			"Rocket Launcher"},
+	{36,			0.0,			"HS Rocket Launcher"},
+	{37,			0.0,			"Flamethrower"},
+	{38,			0.0,			"Minigun"},
+	{39,			0.0,			"Satchel Charge"},
+	{40,			2.0,			"Satchel Detonator"},
+	{41,			0.0,			"Spraycan"},
+	{42,			0.0,			"Fire Extinguisher"},
+	{43,			0.0,			"Camera"},
+	{44,			0.0,			"Nightvision Goggles"},
+	{45,			0.0,			"Thermal Goggles"},
+	{46,			0.0,			"Thermal Goggles"},
+	{47,			0.0,			"Fake Pistol"},
+	{48,			0.0,			"Invalid Weapon"},
+	{49,			15.0,			"Vehicle"},
+	{50,			0.0,			"Heli-Blades"},
+	{51,			100.0,			"Explosion"},
+	{52,			0.0,			"Invalid Weapon"},
+	{53,			5.0,			"Drowned"},
+	{54,			0.0,			"Splat"} // default
+};
 #define SendClientMessageF(%1,%2,%3) \
 	SendClientMessage(%1, %2, (format(szMessage, sizeof(szMessage), %3), szMessage))
 
@@ -279,139 +346,73 @@ stock LoopingAnim(playerid,animlib[],animname[], Float:Speed, looping, lockx, lo
 	ApplyAnimation(playerid, animlib, animname, Speed, looping, lockx, locky, lockz, lp);
 	Anim_Animation[playerid]++;
 }
-forward StopLoopingAnim(playerid);
-public StopLoopingAnim(playerid)
+RCRP::StopLoopingAnim(playerid)
 {
 	gPlayerUsingLoopingAnim[playerid] = 0;
 	ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.0, 0, 0, 0, 0, 0);
 }
 public OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 {
-	if(issuerid != INVALID_PLAYER_ID)
+	if(Dead{playerid}) return false;
+
+	new Float:Damage, Float:tdHealth, Float:armour, Float:dist, Float:poz[3], dam;
+	GetPlayerHealth(playerid,tdHealth);
+	GetPlayerArmour(playerid,armour);
+	GetPlayerPos(playerid, poz[0], poz[1], poz[2]);
+	dist = GetPlayerDistanceFromPoint(issuerid, poz[0], poz[1], poz[2]);
+	dam = floatround(dist);
+
+	switch(weaponid)
 	{
-		new Float:Damage;
-		new Float:health, Float:armour, Float: dist, Float:poz[3], dam;
-
-		GetPlayerHealth(playerid,health);
-		GetPlayerArmour(playerid,armour);
-		GetPlayerPos(playerid, poz[0], poz[1], poz[2]);
-		dist = GetPlayerDistanceFromPoint(issuerid, poz[0], poz[1], poz[2]);
-		dam = floatround(dist);
-
-		SetPVarInt(playerid, "dK", issuerid);
-		SetPVarInt(playerid, "dR", weaponid);
-
-		new newdamage = 0;
-
-		switch(GetPlayerWeapon(issuerid)){
-			case 0: { // Fist
-				Damage = 7;
-				newdamage = 1;
-			}
-			case 1,2,3,5,6,7: { // Misc Melee
-				Damage = 18;
-				newdamage = 1;
-			}
-			case 22: { //9mm
-				Damage = 18;
-				newdamage = 1;
-			}
-
-			case 24: { // Deagle
-				Damage = 50;
-				newdamage = 1;
-			}
-			case 25: { // Shotgun
-				if(RubberBullets[issuerid] == 1)
-				{
-					GetPlayerHealth(playerid, health);
-					SetPlayerHealth(playerid, health);
-					GetPlayerArmour(playerid, armour);
-					SetPlayerArmour(playerid, armour);
-
-					new string[128];
-					format(string, sizeof(string), "You hit %s with a rubberbullet.", pName(playerid));
-					SendClientMessage(issuerid, WHITE, string);
-					format(string, sizeof(string), "You were hit with a rubberbullet by %s", pName(issuerid));
-					SendClientMessage(playerid, WHITE, string);
-					format(string, sizeof(string), "* %s was hit by a rubberbullet, forcing him to the ground.", pName(playerid));
-					CloseMessage(playerid, PURPLE, string);
-
-					LoopingAnim(playerid, "SWEET", "Sweet_injuredloop", 4.0, 1, 0, 0, 0, 1);
-
-					TogglePlayerControllable(playerid, 0);
-					SetTimerEx("ClearAnims", 20*1000, false, "i", playerid);
-				}
-				else
-				{
-					Damage = 75 - (dam * 2);
-					if(Damage <= 0) Damage = 2;
-					newdamage = 1;
-				}
-			}
-			case 27: {
-				Damage = 25 - (dam * 2);
-				if(Damage <= 0) Damage = 2; // SPAS 12
-				newdamage = 1;
-			}
-			case 29: { // MP5
-				Damage = 17;
-				newdamage = 1;
-			}
-			case 31: { // M4
-				Damage = 26;
-				newdamage = 1;
-			}
-			case 30: { // AK
-				Damage = 25;
-				newdamage = 1;
-			}
-			case 33: {
-				Damage = 65; //Country Rifle
-				newdamage = 1;
-			}
-			case 34: { // Sniper
-				Damage = 90;
-				newdamage = 1;
-			}
-			case 28,32: {
-				Damage = 17; //Uzi
-				newdamage = 1;
-			}
-			case 8,4: {
-				Damage = 30; //Katana / Knife
-				newdamage = 1;
-			}
-		}
-
-		switch(bodypart)
+		case 25:
 		{
-			case 3: Damage = Damage - (Damage / 3.8);
-			case 4: Damage = Damage - (Damage / 4.0);
-			case 5: Damage = Damage - (Damage / 2.4);
-			case 6: Damage = Damage - (Damage / 2.5);
-			case 7: Damage = Damage - (Damage / 3.0);
-			case 8: Damage = Damage - (Damage / 2.9);
-		}
-		GunShotWound[playerid][bodypart - 3] ++;
-		if(newdamage == 1){
-			if(armour == 0){
-				health = health - Damage;
-				if(health < 0){
-					health = health - health;
-				}
+			if(!RubberBullets{issuerid})
+			{
+				Damage = WeaponDamage[weaponid][WepDamage] - (dam * 2);
+				if(Damage <= 0) Damage = 2;
 			}
-
-			else{
-				armour = armour - Damage;
-				if(armour < 0){
-					health = health + armour;
-					armour = 0;
-				}
-			}
-			SetPlayerHealth(playerid, health);
-			SetPlayerArmour(playerid, armour);
 		}
+		case 26, 27:
+		{
+			Damage = WeaponDamage[weaponid][WepDamage] - (dam * 2);
+			if(Damage <= 0) Damage = 2;
+		}
+		default:
+		{
+			Damage = WeaponDamage[weaponid][WepDamage];
+		}
+	}
+	switch(bodypart)
+	{
+		case 3: Damage -= (Damage / 3.8); //chest
+		case 4: Damage -= (Damage / 4.0); //groin
+		case 5, 6: Damage -= (Damage / 2.4); //left arm, right arm
+		case 7, 8: Damage -= (Damage / 3.0); //left leg ,right leg
+	}
+	if(armour == 0)
+	{
+		tdHealth = tdHealth - Damage;
+	}
+	else
+	{
+		armour = armour - Damage;
+		if(armour < 0)
+		{
+			tdHealth = tdHealth + armour;
+			armour = 0;
+		}
+	}
+	if(tdHealth <= 0)
+	{
+		Dead{playerid} = true;
+		MakePlayerDead(playerid);
+		format(szMessage,sizeof(szMessage),"%s has been killed by %s. (%s)", RemoveUnderScore(playerid), RemoveUnderScore(issuerid), GetDeathReasonName(issuerid, weaponid));
+		SendClientMessageToAll(RED, szMessage);
+	}
+	else
+	{
+		SetPlayerArmour(playerid, armour);
+		SetPlayerHealth(playerid, tdHealth);
 	}
 	return 1;
 }
@@ -623,6 +624,7 @@ RCRP::CreateAccount(playerid, name[], AdminRegistered[], AdminIP[])
 }
 public OnPlayerSpawn(playerid)
 {
+	SetPlayerTeam(playerid, 4);
 	if(IsSpectating[playerid] == 1)
 	{
 		SetPlayerVirtualWorld(playerid, 0);
@@ -1089,6 +1091,158 @@ stock IsNumeric(const string[])
 	}
 	return 1;
 }
+stock GetDeathReasonName(killerid, reason)
+{
+	new Message[55];
+	if(killerid != INVALID_PLAYER_ID)
+	{
+		switch(reason)
+		{
+			case 0: Message = "Unarmed";
+			case 1: Message = "Brass Knuckles";
+			case 2: Message = "Golf Club";
+			case 3: Message = "Night Stick";
+			case 4: Message = "Knife";
+			case 5: Message = "Baseball Bat";
+			case 6: Message = "Shovel";
+			case 7: Message = "Pool Cue";
+			case 8: Message = "Katana";
+			case 9: Message = "Chainsaw";
+			case 10: Message = "Dildo";
+			case 11: Message = "Dildo";
+			case 12: Message = "Vibrator";
+			case 13: Message = "Vibrator";
+			case 14: Message = "Flowers";
+			case 15: Message = "Cane";
+			case 22: Message = "Pistol";
+			case 23: Message = "Silenced Pistol";
+			case 24: Message = "Desert Eagle";
+			case 25: Message = "Shotgun";
+			case 26: Message = "Sawn-off Shotgun";
+			case 27: Message = "Combat Shotgun";
+			case 28: Message = "MAC-10";
+			case 29: Message = "MP5";
+			case 30: Message = "AK-47";
+			case 31:
+			{
+				if(GetPlayerState(killerid) == PLAYER_STATE_DRIVER)
+				{
+					switch(GetVehicleModel(GetPlayerVehicleID(killerid)))
+					{
+						case 447: Message = "Sea Sparrow Machine Gun";
+						default: Message = "M4";
+					}
+				}
+				else
+				{
+					Message = "M4";
+				}
+			}
+			case 32: Message = "TEC-9";
+			case 33: Message = "Rifle";
+			case 34: Message = "Sniper Rifle";
+			case 37: Message = "Fire";
+			case 38:
+			{
+				if(GetPlayerState(killerid) == PLAYER_STATE_DRIVER)
+				{
+					switch(GetVehicleModel(GetPlayerVehicleID(killerid)))
+					{
+						case 425: Message = "Hunter Machine Gun";
+						default: Message = "Minigun";
+					}
+				}
+				else
+				{
+					Message = "Minigun";
+				}
+			}
+			case 41: Message = "Spraycan";
+			case 42: Message = "Fire Extinguisher";
+			case 49: Message = "Vehicle Collision";
+			case 50:
+			{
+				if(GetPlayerState(killerid) == PLAYER_STATE_DRIVER)
+				{
+					switch(GetVehicleModel(GetPlayerVehicleID(killerid)))
+					{
+						case 417, 425, 447, 465, 469, 487, 488, 497, 501, 548, 563: Message = "Helicopter Blades";
+						default: Message = "Vehicle Collision";
+					}
+				}
+				else Message = "Vehicle Collision";
+				format(Message, sizeof(Message), "%s [%s]", Message, aVehicleNames[GetPlayerVehicleID(killerid) - 400]);
+			}
+			case 51:
+			{
+				if(GetPlayerState(killerid) == PLAYER_STATE_DRIVER)
+				{
+					switch(GetVehicleModel(GetPlayerVehicleID(killerid)))
+					{
+						case 425: Message = "Hunter Rockets";
+						case 432: Message = "Rhino Turret";
+						case 520: Message = "Hydra Rockets";
+						default: Message = "Explosion";
+					}
+				}
+				else
+				{
+					Message = "Explosion";
+				}
+			}
+			default: Message = "Unknown Causes";
+		}
+	}
+	if(killerid == INVALID_PLAYER_ID)
+	{
+		switch (reason)
+		{
+			case 53: Message = "Drowned";
+			case 54: Message = "Collision";
+			case 55: Message = "Falling";
+			default: Message = "Unknown Causes";
+		}
+	}
+	return Message;
+}
+stock MakePlayerDead(playerid)
+{
+	Dead{playerid} = true;
+	SetPlayerHealth(playerid, 15);
+	TogglePlayerControllable(playerid, false);
+	if(!IsPlayerInAnyVehicle(playerid)) ApplyAnimation(playerid, "SWEET", "Sweet_injuredloop", 4.0, 1, 0, 0, 0, 0);
+	SetTimerEx("ApplyDeathAnim", 500, false, "i", playerid);
+	SendSplitMessage(playerid, WHITE, "You have been {E20000}downed.{FFFFFF} You may choose to {44C300}/accept death{FFFFFF} after your death timer expires or wait until you are healed.");
+	return true;
+}
+stock SendSplitMessage(playerid, color, msg[])
+{
+	new ml = 115, result[160], len = strlen(msg), repeat;
+	if(len > ml)
+	{
+		repeat = (len / ml);
+		for(new i = 0; i <= repeat; i++)
+		{
+			result[0] = 0;
+			if(len - (i * ml) > ml)
+			{
+				strmid(result, msg, ml * i, ml * (i+1));
+				format(result, sizeof(result), "%s", result);
+			}
+			else
+			{
+				strmid(result, msg, ml * i, len);
+				format(result, sizeof(result), "%s", result);
+			}
+			SendClientMessage(playerid, color, result);
+		}
+	}
+	else
+	{
+		SendClientMessage(playerid, color, msg);
+	}
+	return true;
+}
 CMD:sit(playerid, params[])
 {
 	new anim;
@@ -1165,16 +1319,10 @@ CMD:rubberbullets(playerid, params[])
 {
 	if(GetPlayerWeapon(playerid) == 25)
 	{
-		if(RubberBullets[playerid] == 0)
-		{
-			SendClientMessage(playerid, BLUE, "Rubber Bullets activated.");
-			RubberBullets[playerid] = 1;
-		}
-		else
-		{
-			SendClientMessage(playerid, BLUE, "Rubber Bullets deactivated.");
-			RubberBullets[playerid] = 0;
-		}
+		RubberBullets{playerid} = !RubberBullets{playerid};
+
+		if(RubberBullets{playerid}) SendClientMessage(playerid, BLUE, "Rubber Bullets activated.");
+		else SendClientMessage(playerid, BLUE, "Rubber Bullets deactivated.");
 	}
 	return 1;
 }
@@ -1509,6 +1657,38 @@ CMD:getp(playerid, params[])
 	}
 	else return SendClientMessage(playerid, RED, "[ERROR]: You are not authorized to use this command.");
 	return 1;
+}
+CMD:revive(playerid, params[])
+{
+	if(!isnull(params))
+	{
+		if(!Dead{playerid}) return SysMsg(playerid, "You are not downed.");
+
+		ClearAnimations(playerid, 1);
+		TogglePlayerControllable(playerid, true);
+		Dead{playerid} = false;
+
+		format(szMessage, sizeof(szMessage), "%s has revived themselves.", RemoveUnderScore(playerid));
+		SendClientMessageToAll(RED, szMessage);
+	}
+	else
+	{
+		if(!IsPlayerAdminLevel(playerid, 1)) return SendClientMessage(playerid, RED, AdminOnly);
+
+		new id = -1;
+		if(sscanf(params, "u", id)) return SyntaxMsg(playerid, "[Usage]: /revive [playerid or name]");
+		if(id == -1) return SysMsg(playerid, "Invalid player");
+		if(!Dead{id}) return SysMsg(playerid, "They are not downed.");
+
+		ClearAnimations(id, 1);
+		TogglePlayerControllable(id, true);
+		Dead{id} = false;
+
+		format(szMessage, sizeof(szMessage), "Admin %s has revived %s.", RemoveUnderScore(playerid), RemoveUnderScore(id));
+		SendClientMessageToAll(RED, szMessage);
+		return true;
+	}
+	return true;
 }
 CMD:set(playerid, params[])
 {
