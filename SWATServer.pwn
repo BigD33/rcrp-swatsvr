@@ -59,23 +59,19 @@ native WP_Hash(buffer[], len, const str[]);
 PreloadAnimLib(playerid, animlib[])
 	ApplyAnimation(playerid,animlib,"null",0.0,0,0,0,0,0);
 
-new
-	ConnectionHandle,
-	szMessage[512],
-	SWATDoor[7],
-	szQuery[1024],
-	DataTimer,
-	playa[32],
-	Float: specPosX[MAX_PLAYERS],
-	Float: specPosY[MAX_PLAYERS],
-	Float: specPosZ[MAX_PLAYERS];
-
-new             Anim_PlayerLooping[MAX_PLAYERS];
-new             Anim_ClearOut[MAX_PLAYERS];
-new             Anim_Animation[MAX_PLAYERS];
-
+new ConnectionHandle;
+new szMessage[256];
+new SWATDoor[7];
+new szQuery[1024];
+new DataTimer;
+new playa[32];
+new Float: specPosX[MAX_PLAYERS];
+new Float: specPosY[MAX_PLAYERS];
+new Float: specPosZ[MAX_PLAYERS];
+new Anim_PlayerLooping[MAX_PLAYERS];
+new Anim_ClearOut[MAX_PLAYERS];
+new Anim_Animation[MAX_PLAYERS];
 new swatgate1, swatOpen = 0, swatext;
-
 new vehiclecount = 0;
 new DoorStatus[7];
 new passAtt[MAX_PLAYERS] = 0;
@@ -86,7 +82,6 @@ new GunShotWound[MAX_PLAYERS][7];
 new gPlayerUsingLoopingAnim[MAX_PLAYERS];
 new IsSpectating[MAX_PLAYERS];
 new WhoSpectating[MAX_PLAYERS];
-
 
 new AdminNames[][] =
 {
@@ -489,9 +484,7 @@ RCRP::CheckAccount(playerid)
 {
 	if(playerid != INVALID_PLAYER_ID)
 	{
-		new rows, fields;
-		cache_get_data(rows, fields);
-		if(rows)
+		if(cache_num_rows())
 		{
 			pVariables[playerid][AccID] = cache_get_field_content_int(0, "AccID");
 			cache_get_field_content(0, "Password", pVariables[playerid][Password], ConnectionHandle, 129);
@@ -557,11 +550,7 @@ RCRP::CreateAccount(playerid, name[], AdminRegistered[], AdminIP[])
 {
 	if(playerid != INVALID_PLAYER_ID)
 	{
-		new rows, fields;
-		cache_get_data(rows, fields);
-		SendClientMessageF(playerid, WHITE, "Rows: %d | Fields: %d", rows, fields);
-		
-		if(rows)
+		if(cache_num_rows())
 		{
 			SendClientMessageF(playerid, WHITE, "The account %s already exists; please pick a new name.", RemoveUnderScore(playerid));
 		}
@@ -767,8 +756,7 @@ public OnPlayerClickPlayer(playerid, clickedplayerid, source)
 }
 RCRP::LoadPlayerData(playerid)
 {
-	new rows, fields;
-	cache_get_data(rows, fields, ConnectionHandle);
+	if(!cache_num_rows()) return true;
 
 	pVariables[playerid][AccID] = cache_get_field_content_int(0, "AccID");
 	pVariables[playerid][SkinID] = cache_get_field_content_int(0, "SkinID");
@@ -790,79 +778,54 @@ RCRP::LoadPlayerData(playerid)
 }
 RCRP::LoadInteriors()
 {
-	new rows, fields;
-	cache_get_data(rows, fields, ConnectionHandle);
-	
-	if(rows)
+	for(new i = 0, x = cache_num_rows(); i < x; i++)
 	{
-		printf("Rows: %d", rows);
-		new i = 0;
-		while(i < rows)
-		{
-			iVariables[i][ID] = cache_get_field_content_int(i, "ID");
-			iVariables[i][InteriorID] = cache_get_field_content_int(i, "InteriorID");
-			iVariables[i][InteriorVW] = cache_get_field_content_int(i, "InteriorVW");
-			iVariables[i][ExteriorID] = cache_get_field_content_int(i, "ExteriorID");
-			iVariables[i][ExteriorVW] = cache_get_field_content_int(i, "ExteriorVW");
-			iVariables[i][iPos][0] = cache_get_field_content_float(i, "iPosX");
-			iVariables[i][iPos][1] = cache_get_field_content_float(i, "iPosY");
-			iVariables[i][iPos][2] = cache_get_field_content_float(i, "iPosZ");
-			iVariables[i][ePos][0] = cache_get_field_content_float(i, "ePosX");
-			iVariables[i][ePos][1] = cache_get_field_content_float(i, "ePosY");
-			iVariables[i][ePos][2] = cache_get_field_content_float(i, "ePosZ");
-			cache_get_field_content(i, "LabelText", iVariables[i][LabelText], ConnectionHandle, 128);
-			iVariables[i][InteriorLoaded] = 1;
-			iVariables[i][PickupID] = CreateDynamicPickup(1272, 23, iVariables[i][ePos][0], iVariables[i][ePos][1], iVariables[i][ePos][2], iVariables[i][ExteriorVW], iVariables[i][ExteriorID], -1, 50);
-			iVariables[i][Label] = CreateDynamic3DTextLabel(iVariables[i][LabelText], YELLOW, iVariables[i][ePos][0], iVariables[i][ePos][1], iVariables[i][ePos][2]+0.8, 100, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, iVariables[i][ExteriorVW], iVariables[i][ExteriorID], -1, 15);
-			i++;
-			printf("ID: %d", iVariables[i][ID]);
-			printf("Interior ID: %d", iVariables[i][InteriorID]);
-		}
+		iVariables[i][ID] = cache_get_field_content_int(i, "ID");
+		iVariables[i][InteriorID] = cache_get_field_content_int(i, "InteriorID");
+		iVariables[i][InteriorVW] = cache_get_field_content_int(i, "InteriorVW");
+		iVariables[i][ExteriorID] = cache_get_field_content_int(i, "ExteriorID");
+		iVariables[i][ExteriorVW] = cache_get_field_content_int(i, "ExteriorVW");
+		iVariables[i][iPos][0] = cache_get_field_content_float(i, "iPosX");
+		iVariables[i][iPos][1] = cache_get_field_content_float(i, "iPosY");
+		iVariables[i][iPos][2] = cache_get_field_content_float(i, "iPosZ");
+		iVariables[i][ePos][0] = cache_get_field_content_float(i, "ePosX");
+		iVariables[i][ePos][1] = cache_get_field_content_float(i, "ePosY");
+		iVariables[i][ePos][2] = cache_get_field_content_float(i, "ePosZ");
+		cache_get_field_content(i, "LabelText", iVariables[i][LabelText], ConnectionHandle, 128);
+		iVariables[i][InteriorLoaded] = 1;
+		iVariables[i][PickupID] = CreateDynamicPickup(1272, 23, iVariables[i][ePos][0], iVariables[i][ePos][1], iVariables[i][ePos][2], iVariables[i][ExteriorVW], iVariables[i][ExteriorID], -1, 50);
+		iVariables[i][Label] = CreateDynamic3DTextLabel(iVariables[i][LabelText], YELLOW, iVariables[i][ePos][0], iVariables[i][ePos][1], iVariables[i][ePos][2]+0.8, 100, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, iVariables[i][ExteriorVW], iVariables[i][ExteriorID], -1, 15);
+		printf("ID: %d", iVariables[i][ID]);
+		printf("Interior ID: %d", iVariables[i][InteriorID]);
 	}
 	return 1;
 }
 RCRP::LoadVehicles()
 {
-	new rows, fields;
-	cache_get_data(rows, fields, ConnectionHandle);
-
-	if(rows)
+	for(new i = 0, x = cache_num_rows(); i < x; i++)
 	{
-		new i = 0;
-		while(i < rows)
-		{
-			vVariables[i][VehicleID] = cache_get_field_content_int(i, "VehicleID");
-			vVariables[i][ModelID] = cache_get_field_content_int(i, "ModelID");
-			vVariables[i][vPos][0] = cache_get_field_content_float(i, "VehX");
-			vVariables[i][vPos][1] = cache_get_field_content_float(i, "VehY");
-			vVariables[i][vPos][2] = cache_get_field_content_float(i, "VehZ");
-			vVariables[i][vPos][3] = cache_get_field_content_float(i, "VehA");
-			vVariables[i][Colour1] = cache_get_field_content_int(i, "Colour1");
-			vVariables[i][Colour2] = cache_get_field_content_int(i, "Colour2");
-			vVariables[i][VehicleLoaded] = 1;
-			vVariables[i][ScriptID] = CreateVehicle(vVariables[i][ModelID], vVariables[i][vPos][0], vVariables[i][vPos][1], vVariables[i][vPos][2], vVariables[i][vPos][3], vVariables[i][Colour1], vVariables[i][Colour2], -1);
-			i++;
-		}
+		vVariables[i][VehicleID] = cache_get_field_content_int(i, "VehicleID");
+		vVariables[i][ModelID] = cache_get_field_content_int(i, "ModelID");
+		vVariables[i][vPos][0] = cache_get_field_content_float(i, "VehX");
+		vVariables[i][vPos][1] = cache_get_field_content_float(i, "VehY");
+		vVariables[i][vPos][2] = cache_get_field_content_float(i, "VehZ");
+		vVariables[i][vPos][3] = cache_get_field_content_float(i, "VehA");
+		vVariables[i][Colour1] = cache_get_field_content_int(i, "Colour1");
+		vVariables[i][Colour2] = cache_get_field_content_int(i, "Colour2");
+		vVariables[i][VehicleLoaded] = 1;
+		vVariables[i][ScriptID] = CreateVehicle(vVariables[i][ModelID], vVariables[i][vPos][0], vVariables[i][vPos][1], vVariables[i][vPos][2], vVariables[i][vPos][3], vVariables[i][Colour1], vVariables[i][Colour2], -1);
 	}
 	return 1;
 }
 RCRP::LoadTeleports()
 {
-	new rows, fields;
-	cache_get_data(rows, fields, ConnectionHandle);
-
-	if(rows)
+	for(new i = 0, x = cache_num_rows(); i < x; i++)
 	{
-		new i = 0;
-		while(i < rows)
-		{
-			tVariables[i][ID] = cache_get_field_content_int(i, "id");
-			cache_get_field_content(i, "Name", tVariables[i][Name], ConnectionHandle, 128);
-			tVariables[i][tPos][0] = cache_get_field_content_float(i, "PosX");
-			tVariables[i][tPos][1] = cache_get_field_content_float(i, "PosY");
-			tVariables[i][tPos][2] = cache_get_field_content_float(i, "PosZ");
-			i++;
-		}
+		tVariables[i][ID] = cache_get_field_content_int(i, "id");
+		cache_get_field_content(i, "Name", tVariables[i][Name], ConnectionHandle, 128);
+		tVariables[i][tPos][0] = cache_get_field_content_float(i, "PosX");
+		tVariables[i][tPos][1] = cache_get_field_content_float(i, "PosY");
+		tVariables[i][tPos][2] = cache_get_field_content_float(i, "PosZ");
 	}
 	return 1;
 }
@@ -1025,16 +988,19 @@ stock RemoveUnderScore(playerid)
 	 }
 	return playersName;
 }
-stock IsValidSkin(skinid){
-	if(skinid == 74 || skinid > 299 || skinid < 1){return 0;}
+stock IsValidSkin(skinid)
+{
+	if(skinid == 74 || skinid > 299 || skinid < 1) return 0;
 	return 1;
 }
-stock IsValidWeatherID(weatherid){
-	if(weatherid < 0 || weatherid > 50){return 0;}
+stock IsValidWeatherID(weatherid)
+{
+	if(weatherid < 0 || weatherid > 50) return 0;
 	return 1;
 }
-stock IsValidVehicleID(vehicleid){
-	if(vehicleid < 400 || vehicleid > 611){return 0;}
+stock IsValidVehicleID(vehicleid)
+{
+	if(vehicleid < 400 || vehicleid > 611) return 0;
 	return 1;
 }
 stock SyntaxMsg(playerid, string[])
@@ -1073,14 +1039,8 @@ stock PlayerJoinMessage(playerid)
 }
 stock strmatch(const String1[], const String2[])
 {
-	if ((strcmp(String1, String2, true, strlen(String2)) == 0) && (strlen(String2) == strlen(String1)))
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	if ((strcmp(String1, String2, true, strlen(String2)) == 0) && (strlen(String2) == strlen(String1))) return true;
+	else return false;
 }
 stock SavePlayerData(playerid)
 {
@@ -1218,42 +1178,34 @@ stock IsNumeric(const string[])
 }
 CMD:sit(playerid, params[])
 {
-
 	new anim;
-
 	if(sscanf(params, "i", anim)) return SendClientMessage(playerid, -1, "USAGE: /sit [1-4]");
-
 	if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 1;
 
-	switch(anim) {
-
+	switch(anim)
+	{
 		case 1: BackAnim(playerid,"PED","SEAT_down",4.1,0,0,1,0,0,8); // 1,0,8
 		case 2: LoopingAnim(playerid,"MISC","seat_lr",2.0,1,0,0,0,0);
 		case 3: LoopingAnim(playerid,"MISC","seat_talk_01",2.0,1,0,0,0,0);
 		case 4: LoopingAnim(playerid,"MISC","seat_talk_02",2.0,1,0,0,0,0);
 		default: SendClientMessage(playerid, -1, "USAGE: /sit [1-4]");
-
 	}
 	return 1;
 }
 CMD:fall(playerid, params[])
 {
 	new anim;
-
 	if(sscanf(params, "i", anim)) return SendClientMessage(playerid, -1, "USAGE: /fall [1-2]");
-
 	if(GetPlayerState(playerid) != PLAYER_STATE_ONFOOT) return 1;
 
-	switch(anim) {
-
+	switch(anim)
+	{
 		case 1: LoopingAnim(playerid,"PED","KO_skid_front",4.1,0,1,1,1,0);
 		case 2: LoopingAnim(playerid,"PED","KO_skid_back",4.1,0,1,1,1,0);
 		case 3: LoopingAnim(playerid, "PED","FLOOR_hit_f", 4.0, 1, 0, 0, 0, 0);
 		default: SendClientMessage(playerid, -1, "USAGE: /fall [1-2]");
-
 	}
 	return 1;
-
 }
 CMD:xyz(playerid, params[])
 {
@@ -1269,7 +1221,6 @@ CMD:pm(playerid, params[])
 {
 	new pid, pmsg[128];
 	if(sscanf(params, "us[128]", pid, pmsg)) return SendClientMessage(playerid, -1, "> USAGE: /pm [playerid/playername] [message]");
-
 	if(!IsPlayerConnected(pid)) return SendClientMessage(playerid, RED, "The player you have tried to message isn't currently online.");
 
 	format(szMessage, sizeof(szMessage), "[PM from %s, ID %d] %s", RemoveUnderScore(playerid), playerid,  pmsg);
