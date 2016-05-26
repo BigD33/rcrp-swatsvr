@@ -374,6 +374,8 @@ public OnGameModeInit()
 	DataTimer = SetTimer("SaveData", 1000*60*30, true);
 
 	CreateRCRPHouseInteriors();
+
+	mysql_log(LOG_ERROR | LOG_WARNING);
 	return 1;
 }
 
